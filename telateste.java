@@ -407,7 +407,7 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
     Connection conecta(){
         String url ="jdbc:mysql://127.0.0.1:3306/aps_3cc?zeroDateTimeBehavior=CONVERT_TO_NULL";
         String usuario = "root";
-        String senha = "sucodeuva12";
+        String senha = "";
         Connection con;
 
             try {
