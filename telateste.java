@@ -1,5 +1,7 @@
 package cronometroaps;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.Vector;
@@ -11,9 +13,9 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
     public static Label lsegundo, lminuto, lmilessimo;
     private JTable tabelacon;
     private DefaultTableModel tabelamold;
-    private JFrame janela;
-    private JPanel painel, painelbot, painelcon;
-    private Label lnome_vei, lnome_equi, lnome_pil, lvolta1, lvolta2, lvoltatot;
+    private JFrame janela, telablock;
+    private JPanel painel, painelbot, painelcon, painelblock;
+    private Label lnome_vei, lnome_equi, lnome_pil, lvolta1, lvolta2, lvoltatot, lblock;
     private TextField tnome_vei;
     private TextField tnome_equi;
     private TextField tnome_pil;
@@ -41,6 +43,19 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         janela.setBackground(new Color(160, 160, 160));
         janela.addWindowListener(this);
         janela.setLayout(null);
+        
+        telablock = new JFrame();
+        telablock.setSize(1000, 650);
+        telablock.setBackground(new Color(0,0,0));
+        telablock.setLayout(null);
+        telablock.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        telablock.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                cleartransfer(); // Limpar área de transferência ao fechar a tela secundária
+            }
+        });
+        
         
         //criando a tabela
         tabelamold = new DefaultTableModel();
@@ -70,6 +85,10 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         painelcon.setLayout(new BorderLayout());
         painelcon.setBackground(Color.GRAY);
         painelcon.add(scrollPane, BorderLayout.CENTER);
+        painelblock = new JPanel();
+        painelblock.setBackground(Color.GRAY);
+        painelblock.setLayout(new BorderLayout());
+        
         // criando menu para a tela
         menuprin = new MenuBar();
         m1 = new Menu("Cronômetro");
@@ -86,6 +105,8 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         m12.addActionListener(this);
         m13.addActionListener(this);
         // criar rótulos para o painel
+        lblock = new Label("OPS... :/");
+        lblock.setFont(new Font("Arial", Font.BOLD, 50));
         lnome_vei = new Label("Nome Veículo");
         lnome_equi = new Label("Nome Equipe");
         lnome_pil = new Label("Nome Piloto");
@@ -134,6 +155,7 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         tmilessimo.setBounds(165, 175, 50, 19);
         lvoltatot.setBounds(140, 95, 69, 13);
         tvoltatot.setBounds(140, 110, 60, 19);
+        lblock.setBounds(10,20, 300, 75);
 
         //adiciona labels e campos ao painel
         painel.add(lnome_vei);
@@ -180,6 +202,8 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         janela.add(painel);
         janela.setMenuBar(menuprin);
         janela.add(painelcon);
+        janela.add(painelblock);
+        telablock.add(lblock);
 
         minuto = new minuto();
         segundo = new segundo();
@@ -193,8 +217,14 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         clicar = 0;
         bSalvar.setEnabled(false);
         bPausar.setEnabled(false);
-       
+        janela.addKeyListener(this);
+        janela.getKeyListeners();
+        janela.setFocusable(true);
+        telablock.addKeyListener(this);
+        telablock.getKeyListeners();
+        telablock.setFocusable(true);
     }
+    
 
 
     //metodos acessores
@@ -301,11 +331,23 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         painel.setVisible(false);
         painelbot.setVisible(false);
         painelcon.setVisible(true);
-    
+    }
+    public void painelblock(){
+        painelblock.setSize(600,530);
+        painelblock.setLocation(120, 55);
+        painel.setVisible(false);
+        painelbot.setVisible(false);
+        painelcon.setVisible(false);
+        painelblock.setVisible(true);
     }
 
     public void mostraCronometro() {
         janela.setVisible(true);
+        janela.requestFocus();
+    }
+    public void mostraTelablock(){
+        telablock.setVisible(true);
+        telablock.requestFocus();
     }
 
     @Override
@@ -339,6 +381,7 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         bPausar.setEnabled(true);
         bRedefinir.setEnabled(true);
         m12.setEnabled(false);
+        
     }
 
     public void botaoPausar() {
@@ -496,12 +539,30 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
 
     @Override
     public void keyPressed(KeyEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        
     }
     
     @Override
     public void keyReleased(KeyEvent e) {
-        // Nada a fazer aqui
+        if(e.getKeyCode() == KeyEvent.VK_PRINTSCREEN){
+            mostraTelablock();
+            JOptionPane.showMessageDialog(null,"Não foi possível capturar a tela");
+            telablock.setLocationRelativeTo(janela);
+            Timer timer = new Timer(0000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    telablock.dispose();
+                }
+            });
+            timer.setRepeats(false); // Apenas uma execução do timer
+            timer.start();
+        }
+        
+    }
+    public void cleartransfer(){
+        Clipboard tranfer = Toolkit.getDefaultToolkit().getSystemClipboard();
+        StringSelection tranferlimpa = new StringSelection("");
+        tranfer.setContents(tranferlimpa, null);
     }
 
     @Override
@@ -509,10 +570,7 @@ public class telateste extends WindowAdapter implements ActionListener, FocusLis
         // Nada a fazer aqui
     }
     
-
     public static void main(String[] args) {
-        bloquearPrint bloquearPrint = new bloquearPrint();
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(bloquearPrint);
         telateste telateste = new telateste();
         telateste.mostraCronometro();
     }
